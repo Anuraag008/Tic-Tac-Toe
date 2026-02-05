@@ -1,20 +1,66 @@
 import logo from "./logo.svg";
 import "./App.css";
+import { connect, Provider } from "react-redux";
+import { createStore } from "redux";
 import { useEffect, useState } from "react";
+
+const initialState = {
+  marks: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+  player: 1,
+  gameOver: false,
+};
+
+const reducer = (state = initialState, action) => {
+  switch (action.type) {
+    case "SET_MARKS":
+      return { ...state, marks: action.payload };
+    case "SET_PLAYER":
+      return { ...state, player: action.payload };
+    case "SET_GAMEOVER":
+      return { ...state, gameOver: action.payload };
+    default:
+      return state;
+  }
+};
+
+const store = createStore(reducer);
 
 function App() {
   return (
     <div className="App">
       <h1 className="color ">Tic Tac Toe</h1>
-      <Board></Board>
+      <Provider store={store}>
+        <BoardContainer></BoardContainer>
+      </Provider>
     </div>
   );
 }
 
-function Board() {
-  const [marks, setMarks] = useState([0, 0, 0, 0, 0, 0, 0, 0, 0]);
-  const [player, setPlayer] = useState(1);
+const mapStateToProps = (state) => {
+  return {
+    marks: state.marks,
+    player: state.player,
+    gameOver: state.gameOver,
+  };
+};
 
+const mapDispatchToProps = (dispatch) => {
+  return {
+    setMarks: (marks) => {
+      dispatch({ type: "SET_MARKS", payload: marks });
+    },
+    setPlayer: (player) => {
+      dispatch({ type: "SET_PLAYER", payload: player });
+    },
+    setGameOver: (gameOver) => {
+      dispatch({ type: "SET_GAMEOVER", payload: gameOver });
+    },
+  };
+};
+
+const BoardContainer = connect(mapStateToProps, mapDispatchToProps)(Board);
+
+function Board({ marks, player, gameOver, setGameOver, setMarks, setPlayer }) {
   useEffect(() => {
     const combinations = [
       [0, 1, 2],
@@ -31,24 +77,38 @@ function Board() {
       if (marks[c[0]] === 1 && marks[c[1]] === 1 && marks[c[2]] === 1) {
         winner = 1;
         alert(`Player ${winner} wins!`);
-        setMarks([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        setTimeout(() => {
+          setMarks([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+          setGameOver(false);
+          setPlayer(1);
+        }, 0);
       }
       if (marks[c[0]] === 2 && marks[c[1]] === 2 && marks[c[2]] === 2) {
         winner = 2;
         alert(`Player ${winner} wins!`);
-        setMarks([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        setTimeout(() => {
+          setMarks([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+          setGameOver(false);
+          setPlayer(1);
+        }, 0);
       }
+    }
+    if (marks.every((m) => m !== 0) && winner === 0) {
+      alert("It's a draw!");
+      setTimeout(() => {
+        setMarks([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        setGameOver(false);
+        setPlayer(1);
+      }, 0);
     }
   }, [marks]);
 
   const changeMark = (i) => {
     const m = [...marks];
-    if (m[i] === 0) {
+    if (m[i] === 0 && !gameOver) {
       m[i] = player;
       setMarks(m);
       setPlayer(player === 1 ? 2 : 1);
-    } else {
-      alert("please click on empty block");
     }
   };
 
@@ -56,8 +116,8 @@ function Board() {
     <div className="Board">
       <div>
         <Block mark={marks[0]} position={0} changeMark={changeMark}></Block>
-        <Block mark={marks[2]} position={2} changeMark={changeMark}></Block>
         <Block mark={marks[1]} position={1} changeMark={changeMark}></Block>
+        <Block mark={marks[2]} position={2} changeMark={changeMark}></Block>
       </div>
       <div>
         <Block mark={marks[3]} position={3} changeMark={changeMark}></Block>
